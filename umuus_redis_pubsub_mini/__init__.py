@@ -35,6 +35,10 @@ Example
 
 ----
 
+    $ export UMUUS_REDIS_PUBSUB_MINI=FILE.json
+
+----
+
     @umuus_redis_pubsub_mini.instance.subscribe()
     def foo(x, y):
         return x * y
@@ -101,7 +105,6 @@ import attr
 import functools
 import toolz
 import addict
-import loguru
 import fire
 import logging
 logger = logging.getLogger(__name__)
@@ -114,6 +117,7 @@ logger.setLevel(
     __name__ == '__main__' and 'DEBUG'
     or os.environ.get(__name__.upper().replace('.', '__') + '_LOG_LEVEL')
     or os.environ.get('LOGGING_MODULE_LOG_LEVEL') or 'WARNING')
+import umuus_logging_decorator
 __version__ = '0.1'
 __url__ = 'https://github.com/junmakii/umuus-redis-pubsub-mini'
 __author__ = 'Jun Makii'
@@ -129,6 +133,7 @@ __install_requires__ = [
     'toolz>=0.9.0',
     'loguru>=0.2.1',
     'fire>=0.1.3',
+    'umuus-logging-decorator@git+https://github.com/junmakii/umuus-logging-decorator.git#egg=umuus_logging_decorator-1.0',
 ]
 __dependency_links__ = []
 __classifiers__ = []
@@ -150,18 +155,6 @@ __static_files__ = {}
 __extra_options__ = {}
 __download_url__ = ''
 __all__ = []
-
-
-@toolz.curry
-def logging_decorator(fn, level='info', max_length=150):
-    @functools.wraps(fn)
-    def wrapper(*args, **kwargs):
-        getattr(
-            loguru.logger,
-            level)(fn.__qualname__ + (str(args) + str(kwargs))[:max_length])
-        return fn(*args, **kwargs)
-
-    return wrapper
 
 
 @attr.s()
@@ -200,18 +193,18 @@ class Listener(object):
         return json.dumps((isinstance(result, dict) and result
                            or dict(data=result)))
 
-    @logging_decorator(level='error')
+    @umuus_logging_decorator.logger.decorator(level='ERROR')
     def on_error(self, err, id):
         self.redis_instance.instance.publish(
             self.channel + ':on_error:' + id,
             self.serializer(dict(error=str(err))))
 
-    @logging_decorator()
+    @umuus_logging_decorator.logger.decorator(level='INFO')
     def on_completed(self, id, result, **kwargs):
         self.redis_instance.instance.publish(
             self.channel + ':on_completed:' + id, self.serializer(result))
 
-    @logging_decorator()
+    @umuus_logging_decorator.logger.decorator(level='INFO')
     def on_next(self, message):
         try:
             data = self.normalizer(message)
@@ -252,7 +245,6 @@ class Redis(object):
         self.listeners += [listener]
         return listener.get_wrapper()
 
-    @logging_decorator()
     def run(self, **kwargs):
         self.pubsub = self.instance.pubsub()
         for listener in self.listeners:

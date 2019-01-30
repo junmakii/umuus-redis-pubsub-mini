@@ -16,6 +16,10 @@ Example
 
 ----
 
+    $ export UMUUS_REDIS_PUBSUB_MINI=FILE.json
+
+----
+
     @umuus_redis_pubsub_mini.instance.subscribe()
     def foo(x, y):
         return x * y

@@ -29,7 +29,8 @@ setup(
  'redis>=3.0.1',
  'toolz>=0.9.0',
  'loguru>=0.2.1',
- 'fire>=0.1.3'],
+ 'fire>=0.1.3',
+ 'umuus-logging-decorator@git+https://github.com/junmakii/umuus-logging-decorator.git#egg=umuus_logging_decorator-1.0'],
     dependency_links=[],
     classifiers=[],
     entry_points={'console_scripts': ['umuus_redis_pubsub_mini = umuus_redis_pubsub_mini:main'],
@@ -63,6 +64,10 @@ setup(
  '    $ umuus_redis_pubsub_mini\n'
  '\n'
  '    >>> import umuus_redis_pubsub_mini\n'
+ '\n'
+ '----\n'
+ '\n'
+ '    $ export UMUUS_REDIS_PUBSUB_MINI=FILE.json\n'
  '\n'
  '----\n'
  '\n'

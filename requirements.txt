@@ -4,3 +4,4 @@ redis>=3.0.1
 toolz>=0.9.0
 loguru>=0.2.1
 fire>=0.1.3
+umuus-logging-decorator@git+https://github.com/junmakii/umuus-logging-decorator.git#egg=umuus_logging_decorator-1.0
