@@ -25,6 +25,13 @@ Example
         return x * y
 
     umuus_redis_pubsub_mini.instance.run()
+    umuus_redis_pubsub_mini.instance.run(daemon=True)
+
+----
+
+    @umuus_redis_pubsub_mini.instance.subscribe(disable_on_completed=True)
+    def bar(x, y):
+        return x * y
 
 ----
 

@@ -44,6 +44,13 @@ Example
         return x * y
 
     umuus_redis_pubsub_mini.instance.run()
+    umuus_redis_pubsub_mini.instance.run(daemon=True)
+
+----
+
+    @umuus_redis_pubsub_mini.instance.subscribe(disable_on_completed=True)
+    def bar(x, y):
+        return x * y
 
 ----
 
@@ -163,6 +170,7 @@ class Listener(object):
     channel = attr.ib(None)
     redis_instance = attr.ib(None)
     return_exception = attr.ib(True)
+    disable_on_completed = attr.ib(False)
 
     def __attrs_post_init__(self):
         self.channel = self.channel or ((hasattr(self.callback, '__module__')
@@ -175,7 +183,8 @@ class Listener(object):
         def wrapper(*args, **kwargs):
             try:
                 result = self.callback(*args, **kwargs)
-                self.on_completed(id=str(uuid.uuid4()), result=result)
+                if not self.disable_on_completed:
+                    self.on_completed(id=str(uuid.uuid4()), result=result)
                 return result
             except Exception as err:
                 self.on_error(err, id=str(uuid.uuid4()))
@@ -212,10 +221,8 @@ class Listener(object):
                     for key, value in data.data.items()
                     if self.spec.varkw or key in self.spec.args
                 })
-            self.on_completed(
-                id=data.id,
-                result=result,
-            )
+            if not self.disable_on_completed:
+                self.on_completed(id=data.id, result=result)
         except Exception as err:
             self.on_error(err, id=data.id)
             return err
@@ -239,9 +246,9 @@ class Redis(object):
         self.instance = redis.Redis(decode_responses=True, **self.options)
 
     @toolz.curry
-    def subscribe(self, callback, channel=None):
+    def subscribe(self, callback, channel=None, **kwargs):
         listener = Listener(
-            callback=callback, channel=channel, redis_instance=self)
+            callback=callback, channel=channel, redis_instance=self, **kwargs)
         self.listeners += [listener]
         return listener.get_wrapper()
 
